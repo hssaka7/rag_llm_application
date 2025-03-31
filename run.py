@@ -111,7 +111,6 @@ class ETL:
         response = self.load_data(transform_df)
         self.logger.info(f"Load response is {response}")
         
-        print("test")
 
 
 
