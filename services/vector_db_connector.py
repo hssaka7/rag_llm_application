@@ -43,7 +43,7 @@ class ChromaDBInterface:
 
 # Example Usage
 if __name__ == "__main__":
-    chroma_db = ChromaDBInterface()
+    chroma_db = ChromaDBInterface(vector_db_path = "./data/chroma_db")
     
     # # Sample documents from your dataset
     # documents = [
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     #     chroma_db.add_documents([doc_id], [content])
     
     # Query example
-    query_result = chroma_db.query("Tell me about the information technology in Nepal", top_k=1)
+    query_result = chroma_db.query("Tell me about the airlines situation in Nepal", top_k=5)
     
     from  pprint import pprint
     pprint(query_result)
