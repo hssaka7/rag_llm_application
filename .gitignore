@@ -1,0 +1,10 @@
+
+__pycache__
+.venv
+.DS_Store
+
+chroma_db
+transform
+*.log
+
+notebook
