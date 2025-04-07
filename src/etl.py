@@ -8,12 +8,10 @@ import re
 import time
 import unicodedata
 
-from bs4 import BeautifulSoup
-from dataclasses import dataclass
-from sentence_transformers import SentenceTransformer
+from dotenv import load_dotenv
 
 from services.vector_db_connector import ChromaDBInterface
-from utils import parse_yaml
+from utils.utils import parse_yaml
 
 
 class ETL:
@@ -48,32 +46,23 @@ class ETL:
         df = pd.read_json(file_path)
         return df
         
-        
-
-    def transform_raw_data(self, df, batch_size = 1000 ):
+    def transform_raw_data(self, df):
 
         df["_id"] = df['_id'].apply(lambda x: x['$oid'])
+        df["published_date"] = df['pub_date'].apply(lambda x: x['$date'])
+
+        # df["updated_date"] = df['updatedAt'].apply(lambda x: x['$date'] if x else None)
         df["description"] = df["description"].apply(lambda x: None if x=='' else x)
         # Taking only the news with descriptions.
         df = df[df["description"].notna()]
-
+        
+        df["encoded_title"] = df["title"].apply(ETL.clean_sentence)
         df["encoded_description"] = df["description"].apply(ETL.clean_sentence)
 
-        return df[['_id', 'encoded_description']]
-
-   
-    @staticmethod
-    def create_embeddings(doc_ids: list, contents:list):
-        model = SentenceTransformer("BAAI/bge-m3")
-        embeddings = model.encode(contents, 
-                                normalize_embeddings=True, 
-                                batch_size=32, 
-                                show_progress_bar=False).tolist()
-        
-        return embeddings
+        return df[['_id', 'encoded_title', 'encoded_description', 'published_date', 'source_name', 'source_url']]
 
 
-    def load_data(self, df, batch_size = 100):
+    def load_data(self, df, batch_size = 10):
         # TODO load the data to vector db
         total_batch = math.ceil(len(df)/ batch_size)
         for start in range(0, len(df), batch_size):
@@ -84,9 +73,11 @@ class ETL:
             start_time = time.time()
             self.logger.info(f"Inserting batch {batch_number} / {total_batch} with {len(batch)} records...")
             
+            
             self.vector_db_conn.add_documents(
                 doc_ids=batch["_id"].astype(str).tolist(),
-                contents=batch["encoded_description"].astype(str).tolist()
+                contents=batch["encoded_description"].astype(str).tolist(),
+                metadatas = batch[['encoded_title','published_date', 'source_name', 'source_url']].to_dict('records')
             )
 
             time_taken = round( (time.time() - start_time), 2 )
@@ -112,23 +103,17 @@ class ETL:
         self.logger.info(f"Load response is {response}")
         
 
-
-
-
-
 if __name__ == "__main__":
     
-    logger_file_path = 'logging_config.yaml'
-    raw_file_path = 'data/news.json'
-    chroma_db_path = './data/chroma_db'
+    load_dotenv()
+    logging_config_path = os.environ["LOGGER_FILE_PATH"]
+    raw_data_path = os.environ["RAW_DATA_PATH"]
+    chroma_db_path = os.environ["CHROMA_DB_PATH"]
 
     # set loggers
-    logging.config.dictConfig(parse_yaml(logger_file_path))
+    logging.config.dictConfig(parse_yaml(logging_config_path))
 
-
-
-    
-    etl_runner = ETL(raw_filepath= raw_file_path,
+    etl_runner = ETL(raw_filepath= raw_data_path,
                      vector_db_path=chroma_db_path)
     
     etl_runner.run()

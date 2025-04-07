@@ -2,9 +2,13 @@
 __pycache__
 .venv
 .DS_Store
+__pycache__
+.gradio
+
 
 chroma_db
 transform
 *.log
 
 notebook
+app.log

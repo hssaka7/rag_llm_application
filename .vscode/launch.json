@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "news_runner",
+            "name": "etl",
             "type": "debugpy",
             "request": "launch",
-            "program": "run.py",
+            "program": "src/etl.py",
             "console": "integratedTerminal",
         
         },
@@ -16,18 +16,10 @@
             "name": "UI_runner",
             "type": "debugpy",
             "request": "launch",
-            "program": "services/ui.py",
+            "program": "src/ui.py",
             "console": "integratedTerminal",
         
-        }
-    
-        {
-            "name": "news_query",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "services/vector_db_connector.py",
-            "console": "integratedTerminal",
-        
-        }
+        },
+
     ]
 }
