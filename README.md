@@ -2,7 +2,7 @@
 
 # RAG based llm document querying system
 
-- open .env and replace the value for GEMINI_API_KEY by actual gemini api key and save the file.
+- open .env and replace the value for GEMINI_API_KEY by actual gemini api key and save the file. Get Gemini key here for free: https://ai.google.dev/gemini-api/docs/quickstart?lang=python
 
 
 - Install dependencies: 
