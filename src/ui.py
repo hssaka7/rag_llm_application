@@ -27,8 +27,7 @@ class SummaryAgent:
         self.gemini_service = GeminiService(self.llm_api_key)
         self.vector_db = ChromaDBInterface(vector_db_path=self.chroma_db_path)
         self.system_prompt = self._read_system_prompt()
-        
-    
+            
     def _read_system_prompt(self):
         with open(self.system_prompt_path, 'r', encoding='utf-8') as fp:
             base_system_prompt = fp.read()
@@ -128,8 +127,6 @@ with gr.Blocks() as app:
             outputs=[save_prompt_output]
         )
 
-        
-
     with gr.Tab("Query Database"):
         query_text = gr.Textbox(label="Query")
         top_k = gr.Slider(minimum=1, maximum=30, value=5, label="Top K")
@@ -149,6 +146,4 @@ with gr.Blocks() as app:
             outputs=summary_output
         )
     
-    
-
 app.launch()
