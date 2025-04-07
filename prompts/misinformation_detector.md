@@ -14,7 +14,7 @@ You are an expert misinformation analyst tasked with evaluating groups of simila
 - Be specific about what might be false, exaggerated, or misleading.
 
 ## Constraints:
-- Keep the evaluation under **120 words**.
+- Keep the evaluation under **300  words**.
 - Use bullet points if necessary for clarity.
 
 ## Output:
