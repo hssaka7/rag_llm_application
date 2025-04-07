@@ -23,22 +23,31 @@ class SummaryAgent:
         self.system_prompt_path = os.environ["SYSTEM_PROMPT_PATH"]
         self.llm_api_key = os.environ["GEMINI_API_KEY"]
         self.chroma_db_path = os.environ["CHROMA_DB_PATH"]
-
+       
         self.gemini_service = GeminiService(self.llm_api_key)
         self.vector_db = ChromaDBInterface(vector_db_path=self.chroma_db_path)
-        self.system_prompt = self._read_system_prompt()
+        
+
+        self.prompt_file_map ={
+                "Misinformation Detector Prompt": "prompts/misinformation_detector.md",
+                "Social Media reporter Prompt": "prompts/social_media_reporter.md",
+                "Website Reporter Prompt": "prompts/website_reporter.md",
+                "Story Builder Prompt": "prompts/story_builder.md"
+        }
+        self.prompt_map = {}
+
+        
             
-    def _read_system_prompt(self):
-        with open(self.system_prompt_path, 'r', encoding='utf-8') as fp:
+    def read_prompt(self, prompt_path:str):
+        with open(prompt_path, 'r', encoding='utf-8') as fp:
             base_system_prompt = fp.read()
             return base_system_prompt
     
-    def save_system_prompt(self, prompt:str):
+    def save_prompt(self, prompt_path:str, prompt:str):
 
         try:
-            self.system_prompt = prompt
-            with open(self.system_prompt_path, 'w', encoding='utf-8') as fp:
-                fp.writelines(self.system_prompt)
+            with open(prompt_path, 'w', encoding='utf-8') as fp:
+                fp.writelines(prompt)
             return "✅ System prompt saved successfully."
         except Exception as e:
             logger.error(f"Error saving system prompt: {str(e)}")
@@ -79,26 +88,29 @@ class SummaryAgent:
         
         return df
 
-    def stream_summary(self, system_prompt,contents_df):
+    def stream_summary(self, prompt_name,contents_df):
         
-        self.system_prompt = system_prompt
+        agent_role = self.read_prompt(self.prompt_file_map[prompt_name])
         if contents_df.empty:
             yield "No documents to summarize."
             return
         
         docs = contents_df["Content"].tolist()
-        prompt = "Summarize the following documents briefly:\n" + "\n\n".join(docs)
+        prompt = "These are the documents :\n" + "\n\n".join(docs)
         
         response_stream = self.gemini_service.generate_content_stream(
             model="gemini-2.0-flash",
             contents=[prompt],
-            system_instruction= self.system_prompt,
+            system_instruction= agent_role,
         )
         
         for chunk in response_stream:
             yield chunk
 
+
+
 summary_agent = SummaryAgent()
+prompt_context = {k:{} for k in summary_agent.prompt_file_map.keys()}
 
 with gr.Blocks() as app:
     gr.Markdown("## ChromaDB Document Management UI")
@@ -112,20 +124,28 @@ with gr.Blocks() as app:
         add_btn.click(summary_agent.add_documents, inputs=[doc_id, content, metadata], outputs=add_output)
 
     with gr.Tab("Prompts"):
-        
-        system_prompt_input = gr.Textbox(label="Edit System Prompt",
-                                         lines=25,
-                                         value=summary_agent.system_prompt,
-                                         interactive=True)
-        
-        save_prompt_button = gr.Button("Save Prompt")
-        save_prompt_output = gr.Textbox(label="Save Status", interactive=False)
-
-        save_prompt_button.click(
-            fn=summary_agent.save_system_prompt,
-            inputs=[system_prompt_input],
-            outputs=[save_prompt_output]
-        )
+        for prompt_name, prompt_filepath in summary_agent.prompt_file_map.items():
+            with gr.Tab(prompt_name):
+                prompt_context[prompt_name]["prompt_input"] = gr.Textbox(
+                    label=f"Edit: {prompt_name}",
+                    lines=25,
+                    value=summary_agent.read_prompt(prompt_filepath),
+                    interactive=True
+                )
+                prompt_context[prompt_name]["prompt_file_location"]=gr.Textbox(
+                    label = f"{prompt_name} File path",
+                    value = prompt_filepath,
+                    interactive=False
+                )
+                prompt_context[prompt_name]["save_button"] = gr.Button(f"Save {prompt_name}")
+                prompt_context[prompt_name]["save_output"] = gr.Textbox(label="Save Status", interactive=False)
+                    
+                prompt_context[prompt_name]["save_button"].click(
+                        summary_agent.save_prompt,
+                        inputs= [prompt_context[prompt_name]["prompt_file_location"],
+                                prompt_context[prompt_name]["prompt_input"]],
+                        outputs=[prompt_context[prompt_name]["save_output"]]
+                )
 
     with gr.Tab("Query Database"):
         query_text = gr.Textbox(label="Query")
@@ -136,13 +156,20 @@ with gr.Blocks() as app:
         query_btn.click(summary_agent.query_db,
                         inputs=[query_text, top_k],
                         outputs=query_output)
+        
+        prompt_dropdown = gr.Dropdown(
+            choices=list(summary_agent.prompt_file_map.keys()),
+            label="Select a System Prompt",
+            value=list(summary_agent.prompt_file_map.keys())[0],  # default to first
+        )
+        
 
         summarize_btn = gr.Button("Summarize Documents")
         summary_output = gr.Textbox(label="Summary", lines=30)
 
         summarize_btn.click(
             summary_agent.stream_summary,
-            inputs=[system_prompt_input, query_output],
+            inputs=[prompt_dropdown, query_output],
             outputs=summary_output
         )
     
