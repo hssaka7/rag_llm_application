@@ -78,11 +78,19 @@ class SummaryAgent:
         documents = result['documents'][0]
         metadatas = result['metadatas'][0]
         
+        titles = [x.get("encoded_title", "") for x in metadatas]
+        published_dates = [x.get("published_date", "") for x in metadatas]
+        source_names = [x.get("source_name", "") for x in metadatas]
+        source_urls = [x.get("source_url", "") for x in metadatas]
+
         data = {
             "Document ID": doc_ids,
             "Score": distances,
             "Content": documents,
-            "Metadata": [str(metadata) for metadata in metadatas],
+            "Title": titles,
+            "Published Date": published_dates,
+            "Sources":source_names,
+            "Source URL": source_urls,
         }
         df = pd.DataFrame(data)
         
@@ -95,9 +103,26 @@ class SummaryAgent:
             yield "No documents to summarize."
             return
         
-        docs = contents_df["Content"].tolist()
-        prompt = "These are the documents :\n" + "\n\n".join(docs)
+    
+        prompt = f"## Below are the {len(contents_df)} documents to summarize:\n"
+
         
+        for i, content in enumerate(contents_df.to_dict('records')):
+            
+        
+            title = content["Title"]
+            published_date = content["Published Date"]
+            source_name = content["Sources"]
+            source_url = content["Source URL"]
+            document = content["Content"]
+            
+            prompt += f"{i+1}. "
+            prompt += f"Title: {title}\n"
+            prompt += f"Content: {document}\n"
+            prompt += f"Published Date: {published_date}\n"
+            prompt += f"Source Name: {source_name} "
+            prompt += f"Source URL: {source_url}\n\n"
+
         response_stream = self.gemini_service.generate_content_stream(
             model="gemini-2.0-flash",
             contents=[prompt],
@@ -112,7 +137,7 @@ class SummaryAgent:
 summary_agent = SummaryAgent()
 prompt_context = {k:{} for k in summary_agent.prompt_file_map.keys()}
 
-with gr.Blocks() as app:
+with gr.Blocks(gr.themes.Ocean()) as app:
     gr.Markdown("## ChromaDB Document Management UI")
     
     with gr.Tab("Add Document"):
@@ -124,6 +149,7 @@ with gr.Blocks() as app:
         add_btn.click(summary_agent.add_documents, inputs=[doc_id, content, metadata], outputs=add_output)
 
     with gr.Tab("Prompts"):
+        
         for prompt_name, prompt_filepath in summary_agent.prompt_file_map.items():
             with gr.Tab(prompt_name):
                 prompt_context[prompt_name]["prompt_input"] = gr.Textbox(
@@ -149,7 +175,7 @@ with gr.Blocks() as app:
 
     with gr.Tab("Query Database"):
         query_text = gr.Textbox(label="Query")
-        top_k = gr.Slider(minimum=1, maximum=30, value=5, label="Top K")
+        top_k = gr.Number(minimum=1, maximum=100, value=10, label="Top K")
         query_btn = gr.Button("Search")
         
         query_output = gr.DataFrame(label="Query Results")
@@ -173,4 +199,4 @@ with gr.Blocks() as app:
             outputs=summary_output
         )
     
-app.launch()
+app.launch(pwa=True)

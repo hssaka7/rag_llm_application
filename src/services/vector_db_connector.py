@@ -1,5 +1,6 @@
 import logging
 import chromadb
+from chromadb.config import Settings
 import unicodedata
 from sentence_transformers import SentenceTransformer
 
@@ -8,7 +9,9 @@ class ChromaDBInterface:
         self.logger = logging.getLogger(__name__)
         self.client = chromadb.PersistentClient(path=vector_db_path)
         self.model = SentenceTransformer("BAAI/bge-m3")  # Multilingual model
+        
         self.collection = self.client.get_or_create_collection(name=collection_name)
+                                                    
 
     def add_documents(self, doc_ids: list, contents: list, metadatas: list = None):
         """Cleans and adds documents with embeddings and metadata to ChromaDB."""
@@ -40,7 +43,7 @@ class ChromaDBInterface:
             embeddings = self.model.encode(
                 new_contents,
                 normalize_embeddings=True,
-                batch_size=32,
+                batch_size=16,
                 show_progress_bar=False
             ).tolist()
 
