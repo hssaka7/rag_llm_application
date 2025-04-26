@@ -29,6 +29,8 @@ class SummaryAgent:
        
         self.gemini_service = GeminiService(self.llm_api_key)
 
+        self.chat = self.gemini_service.get_chat()
+
         self.vector_db = ChromaDBInterface(vector_db_path=self.chroma_db_path)
         
 
@@ -136,7 +138,11 @@ class SummaryAgent:
         for chunk in response_stream:
             yield chunk
     
-
+    def stream_chat(self, chat_history):
+        response = self.chat.send_message_stream(chat_history[-2]['content'])
+        for chunk in response:
+            yield (chunk.text)
+        
 
 summary_agent = SummaryAgent()
 prompt_context = {k:{} for k in summary_agent.prompt_file_map.keys()}
@@ -214,13 +220,16 @@ with gr.Blocks(gr.themes.Ocean()) as app:
                 chat_history.append({"role": "user", "content": msg})
                 return "", chat_history
             
-        def bot_response(chat_history):
+        def bot_response(chat_history:list):
 
             # generate AI response
-            bot_message = "hey there, I am a bot"
-            chat_history.append({"role": "assistant", "content": bot_message})
+            bot_message = summary_agent.stream_chat(chat_history)
+           
+            chat_history.append({"role": "assistant", "content": ""})
+            for character in bot_message:
+                chat_history[-1]['content'] += character
+                yield chat_history
             
-            return chat_history
 
     msg.submit(user_request, [msg, chatbot], [msg, chatbot], queue=False).then(
         bot_response, chatbot, chatbot

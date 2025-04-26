@@ -52,3 +52,6 @@ class GeminiService:
             print(f"An error occurred: {e}")
             return None
 
+    def get_chat(self, model: str = "gemini-2.0-flash",):
+        chat = self.client.chats.create(model=model)
+        return chat
