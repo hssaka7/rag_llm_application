@@ -7,6 +7,8 @@ class GeminiService:
         Initializes the GeminiService with the provided API key.
         """
         self.client = genai.Client(api_key=api_key)
+    
+
 
     def generate_content_stream(self,  
                                 contents: list,

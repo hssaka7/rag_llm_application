@@ -4,6 +4,9 @@ import logging.config
 import os
 import pandas as pd
 
+import random
+import time
+
 from dotenv import load_dotenv
 
 from services.vector_db_connector import ChromaDBInterface  
@@ -25,6 +28,7 @@ class SummaryAgent:
         self.chroma_db_path = os.environ["CHROMA_DB_PATH"]
        
         self.gemini_service = GeminiService(self.llm_api_key)
+
         self.vector_db = ChromaDBInterface(vector_db_path=self.chroma_db_path)
         
 
@@ -66,7 +70,7 @@ class SummaryAgent:
         self.vector_db.add_documents([doc_id], [content], [metadata_dict])
         return f"✅ Document {doc_id} added successfully."
 
-
+  
     def query_db(self, query_text, top_k):
         if not query_text:
             return pd.DataFrame(), "❌ Please provide a query."
@@ -131,7 +135,7 @@ class SummaryAgent:
         
         for chunk in response_stream:
             yield chunk
-
+    
 
 
 summary_agent = SummaryAgent()
@@ -198,5 +202,35 @@ with gr.Blocks(gr.themes.Ocean()) as app:
             inputs=[prompt_dropdown, query_output],
             outputs=summary_output
         )
-    
+     
+    with gr.Tab("Chat"):
+        chatbot = gr.Chatbot(type="messages")
+        msg = gr.Textbox()
+        clear_button = gr.Button("Clear")
+
+        def user_request(msg, chat_history):
+            if msg:
+
+                chat_history.append({"role": "user", "content": msg})
+                return "", chat_history
+            
+        def bot_response(chat_history):
+
+            # generate AI response
+            bot_message = "hey there, I am a bot"
+            chat_history.append({"role": "assistant", "content": bot_message})
+            
+            return chat_history
+
+    msg.submit(user_request, [msg, chatbot], [msg, chatbot], queue=False).then(
+        bot_response, chatbot, chatbot
+    )
+
+    clear_button.click(
+        lambda: None, None, chatbot, queue=False
+    )
+
+
+
+
 app.launch(pwa=True)

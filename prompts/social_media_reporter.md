@@ -19,3 +19,4 @@ You are a social media news reporter who summarizes news into engaging posts for
 
 ## Output:
 - This news will be posted on Instagram and Twitter.
+- Provide the list of unique sources with url at the end.
