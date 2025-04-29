@@ -9,7 +9,7 @@ import time
 
 from dotenv import load_dotenv
 
-from agents.rag_chatbot import graph
+from agents.rag_chatbot import graph, memory
 from services.vector_db_connector import ChromaDBInterface  
 from services.llm import GeminiService
 from utils.utils import parse_yaml
@@ -33,6 +33,7 @@ class SummaryAgent:
         self.gemini_service = GeminiService(self.llm_api_key)
 
         self.chat = graph
+        self.chat_memory = memory
 
         self.vector_db = ChromaDBInterface(vector_db_path=self.chroma_db_path)
         
@@ -150,7 +151,9 @@ class SummaryAgent:
         
         for chunks in agent_response["messages"][-1].content:
             yield chunks
-
+    
+    def clear_chat_memory(self):
+        self.chat_memory.delete_thread("abc123")
 
         
 
@@ -247,7 +250,7 @@ with gr.Blocks(gr.themes.Ocean()) as app:
     )
 
     clear_button.click(
-        lambda: None, None, chatbot, queue=False
+        lambda: summary_agent.clear_chat_memory(), None, chatbot, queue=False
     )
 
 
