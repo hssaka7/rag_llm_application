@@ -4,11 +4,12 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
-            "name": "etl",
+            "name": "RAG Chatbot",
             "type": "debugpy",
             "request": "launch",
-            "program": "src/etl.py",
+            "program": "src/agents/rag_chatbot.py",
             "console": "integratedTerminal",
         
         },
@@ -17,6 +18,14 @@
             "type": "debugpy",
             "request": "launch",
             "program": "src/ui.py",
+            "console": "integratedTerminal",
+        
+        },
+        {
+            "name": "etl",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "src/etl.py",
             "console": "integratedTerminal",
         
         },

@@ -9,6 +9,7 @@ import time
 
 from dotenv import load_dotenv
 
+from agents.rag_chatbot import graph
 from services.vector_db_connector import ChromaDBInterface  
 from services.llm import GeminiService
 from utils.utils import parse_yaml
@@ -16,6 +17,8 @@ from utils.utils import parse_yaml
 
 # Environment setup
 load_dotenv()
+
+
 logging_config_path = os.environ["LOGGER_FILE_PATH"]
 logging.config.dictConfig(parse_yaml(logging_config_path))
 logger = logging.getLogger(__name__)
@@ -29,7 +32,7 @@ class SummaryAgent:
        
         self.gemini_service = GeminiService(self.llm_api_key)
 
-        self.chat = self.gemini_service.get_chat()
+        self.chat = graph
 
         self.vector_db = ChromaDBInterface(vector_db_path=self.chroma_db_path)
         
@@ -139,9 +142,16 @@ class SummaryAgent:
             yield chunk
     
     def stream_chat(self, chat_history):
-        response = self.chat.send_message_stream(chat_history[-2]['content'])
-        for chunk in response:
-            yield (chunk.text)
+        
+        config = {"configurable": {"thread_id": "abc123"}}
+        user_message = chat_history[-2]["content"]
+        
+        agent_response = self.chat.invoke({"messages": [ {"role": "user", "content": user_message } ]},config=config)
+        
+        for chunks in agent_response["messages"][-1].content:
+            yield chunks
+
+
         
 
 summary_agent = SummaryAgent()
@@ -228,6 +238,7 @@ with gr.Blocks(gr.themes.Ocean()) as app:
             chat_history.append({"role": "assistant", "content": ""})
             for character in bot_message:
                 chat_history[-1]['content'] += character
+                
                 yield chat_history
             
 

@@ -1,9 +1,15 @@
 accelerate
 
-chromadb
+
 
 google-genai
 gradio
+
+langchain-chroma
+langchain[google-genai]
+langchain-google-genai
+langchain-huggingface
+langgraph
 
 pandas
 python-dotenv
