@@ -12,3 +12,5 @@ transform
 
 notebook
 app.log
+
+.vscode/settings.json
