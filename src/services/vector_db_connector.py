@@ -5,11 +5,25 @@ import unicodedata
 from sentence_transformers import SentenceTransformer
 
 class ChromaDBInterface:
-    def __init__(self, collection_name: str = "documents", vector_db_path="./chroma_db"):
+    def __init__(
+        self,
+        collection_name: str = "documents",
+        vector_db_path: str = "./chroma_db",
+        embedding_model=None,
+        client=None
+    ):
         self.logger = logging.getLogger(__name__)
-        self.client = chromadb.PersistentClient(path=vector_db_path)
-        self.model = SentenceTransformer("BAAI/bge-m3")  # Multilingual model
-        
+        # Allow dependency injection for embedding model and client
+        if client is not None:
+            self.client = client
+        else:
+            self.client = chromadb.PersistentClient(path=vector_db_path)
+
+        if embedding_model is not None:
+            self.model = embedding_model
+        else:
+            self.model = SentenceTransformer("BAAI/bge-m3")  # Multilingual model
+
         self.collection = self.client.get_or_create_collection(name=collection_name)
                                                     
 

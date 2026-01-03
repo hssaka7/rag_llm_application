@@ -16,18 +16,28 @@ logging_config_path = os.environ["LOGGER_FILE_PATH"]
 logging.config.dictConfig(parse_yaml(logging_config_path))
 logger = logging.getLogger(__name__)
 
+
+
 class SummaryAgent:
-    def __init__(self):
+    def __init__(self, vector_db=None, llm_service=None):
         self.logger = logger
         self.system_prompt_path = os.environ["SYSTEM_PROMPT_PATH"]
         self.chroma_db_path = os.environ["CHROMA_DB_PATH"]
-        self.ollama_service = OllamaService()
+
+        # Dependency injection for vector_db and llm_service
+        if vector_db is not None:
+            self.vector_db = vector_db
+        else:
+            self.vector_db = ChromaDBInterface(vector_db_path=self.chroma_db_path)
+
+        if llm_service is not None:
+            self.llm_service = llm_service
+        else:
+            self.llm_service = OllamaService()
 
         self.chat = graph
         self.chat_memory = memory
 
-        self.vector_db = ChromaDBInterface(vector_db_path=self.chroma_db_path)
-        
         self.prompt_file_map ={
                 "Misinformation Detector Prompt": "prompts/misinformation_detector.md",
                 "Social Media reporter Prompt": "prompts/social_media_reporter.md",
@@ -112,7 +122,7 @@ class SummaryAgent:
             prompt += f"Source Name: {source_name} "
             prompt += f"Source URL: {source_url}\n\n"
 
-        response_stream = self.ollama_service.generate_content_stream(
+        response_stream = self.llm_service.generate_content_stream(
             prompt=prompt,
             system_instruction=agent_role
         )

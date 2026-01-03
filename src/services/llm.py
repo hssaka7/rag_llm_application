@@ -5,9 +5,13 @@ from langchain_core.prompts import ChatPromptTemplate
 
 
 
+
 class OllamaService:
-    def __init__(self, model: str = "gemma3:1b", temperature: float = 0.1):
-        self.llm = OllamaLLM(model=model, temperature=temperature)
+    def __init__(self, model: str = "gemma3:1b", temperature: float = 0.1, llm_instance=None):
+        if llm_instance is not None:
+            self.llm = llm_instance
+        else:
+            self.llm = OllamaLLM(model=model, temperature=temperature)
 
     def generate_content_stream(self, prompt: str, system_instruction: str = None):
         """

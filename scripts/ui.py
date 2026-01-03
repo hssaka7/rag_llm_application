@@ -4,10 +4,17 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+
 from src.agents.summary_agent import SummaryAgent
+from src.services.vector_db_connector import ChromaDBInterface
+from src.services.llm import OllamaService
 
+# Example: Custom dependency injection (can be replaced with mocks or test doubles)
+# vector_db = ChromaDBInterface(...)
+# ollama_service = OllamaService(...)
+# summary_agent = SummaryAgent(vector_db=vector_db, ollama_service=ollama_service)
 
-summary_agent = SummaryAgent()
+summary_agent = SummaryAgent()  # Default instantiation, but now supports DI
 prompt_context = {k:{} for k in summary_agent.prompt_file_map.keys()}
 
 with gr.Blocks(gr.themes.Ocean()) as app:
