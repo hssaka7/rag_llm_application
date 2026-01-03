@@ -9,8 +9,7 @@ import yaml
 
 from dotenv import load_dotenv
 
-from langchain import hub
-from langchain.chat_models import init_chat_model
+from langchain_ollama.chat_models import ChatOllama
 from langchain_chroma import Chroma
 from langchain_core.tools import tool
 from langchain_core.documents import Document
@@ -32,12 +31,9 @@ logging.config.dictConfig(logger_conf)
 logger = logging.getLogger(__name__)
 
 
-if "GOOGLE_API_KEY" not in os.environ:
-    os.environ["GOOGLE_API_KEY"] = getpass.getpass("Enter your Google AI API key: ")
-
 
 # GENERATIVE LLM
-llm = init_chat_model("gemini-2.0-flash", model_provider="google_genai")
+llm = ChatOllama(model="qwen3:4b")
 
 # EMBEDDING MODEL
 embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-m3",
@@ -63,7 +59,12 @@ vector_store = Chroma(
 )
 
 # Prompt
-prompt = hub.pull("rlm/rag-prompt")
+prompt = """
+You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise.
+Question: {question} 
+Context: {context} 
+Answer:
+"""
 
 
 @tool(response_format="content_and_artifact")
@@ -146,26 +147,5 @@ memory = MemorySaver()
 graph = graph_builder.compile(checkpointer=memory)
 
 
-# # Specify an ID for the thread
-# config = {"configurable": {"thread_id": "abc123"}}
 
-# input_message = "Who is Ravi Lamichane "
-
-# for step in graph.stream(
-#     {"messages": [{"role": "user", "content": input_message}]},
-#     stream_mode="values",
-#     config=config
-# ):
-#     step["messages"][-1].pretty_print()
-
-# input_message = "what is he doing now"
-
-# print("\n\n/////////////////////////////////////////\n\n")
-
-# for step in graph.stream(
-#     {"messages": [{"role": "user", "content": input_message}]},
-#     stream_mode="values",
-#     config=config
-# ):
-#     step["messages"][-1].pretty_print()
 

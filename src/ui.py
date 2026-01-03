@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 from agents.rag_chatbot import graph, memory
 from services.vector_db_connector import ChromaDBInterface  
-from services.llm import GeminiService
+from services.llm import OllamaService
 from utils.utils import parse_yaml
 
 
@@ -27,10 +27,8 @@ class SummaryAgent:
     def __init__(self):
         self.logger = logger
         self.system_prompt_path = os.environ["SYSTEM_PROMPT_PATH"]
-        self.llm_api_key = os.environ["GEMINI_API_KEY"]
         self.chroma_db_path = os.environ["CHROMA_DB_PATH"]
-       
-        self.gemini_service = GeminiService(self.llm_api_key)
+        self.ollama_service = OllamaService()
 
         self.chat = graph
         self.chat_memory = memory
@@ -133,14 +131,14 @@ class SummaryAgent:
             prompt += f"Source Name: {source_name} "
             prompt += f"Source URL: {source_url}\n\n"
 
-        response_stream = self.gemini_service.generate_content_stream(
-            model="gemini-2.0-flash",
-            contents=[prompt],
-            system_instruction= agent_role,
+        response_stream = self.ollama_service.generate_content_stream(
+            prompt=prompt,
+            system_instruction=agent_role
         )
-        
+        summary = ""
         for chunk in response_stream:
-            yield chunk
+            summary += chunk
+            yield summary
     
     def stream_chat(self, chat_history):
         
@@ -223,7 +221,7 @@ with gr.Blocks(gr.themes.Ocean()) as app:
         )
      
     with gr.Tab("Chat"):
-        chatbot = gr.Chatbot(type="messages")
+        chatbot = gr.Chatbot()
         msg = gr.Textbox()
         clear_button = gr.Button("Clear")
 

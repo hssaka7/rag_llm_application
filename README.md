@@ -3,7 +3,7 @@
 
 # RAG-based LLM Document Querying System
 
-This project is a Retrieval-Augmented Generation (RAG) system for querying documents using Large Language Models (LLMs). It leverages a vector database for efficient document retrieval and integrates with Gemini LLM APIs for advanced querying and reporting.
+This project is a Retrieval-Augmented Generation (RAG) system for querying documents using Large Language Models (LLMs). It leverages a vector database for efficient document retrieval and integrates with Ollama for advanced local LLM querying and reporting.
 
 ---
 
@@ -25,15 +25,28 @@ git clone https://github.com/yourusername/rag_llm_application.git
 cd rag_llm_application
 ```
 
-### 2. Configure API Keys
 
-Create a `.env` file in the project root and set your Gemini API key:
+### 2. Install and Run Ollama
 
+Ollama is required to run local LLMs (e.g., Llama 3, Mistral, etc.).
+
+**Install Ollama:**
+
+- [Ollama Download & Install Guide](https://ollama.com/download)
+
+**Start Ollama:**
+
+```bash
+ollama serve
 ```
-GEMINI_API_KEY=your_actual_gemini_api_key
+
+**Pull a Model (e.g., Llama 3):**
+
+```bash
+ollama pull llama3
 ```
 
-Get your free Gemini API key here: [Gemini API Quickstart](https://ai.google.dev/gemini-api/docs/quickstart?lang=python)
+You can use any supported model (see [Ollama Models](https://ollama.com/library)).
 
 ### 3. Create and Activate a Virtual Environment
 
@@ -83,6 +96,7 @@ python src/ui.py
 
 ## Configuration
 
+- **Ollama Model:** By default, the UI uses the `llama3` model. You can change this in the code or by pulling a different model with Ollama.
 - **Logging:** See `configs/logging_config.yaml` for logging setup.
 - **Prompts:** Customize prompt templates in the `prompts/` directory.
 

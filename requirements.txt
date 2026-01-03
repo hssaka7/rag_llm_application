@@ -1,14 +1,11 @@
 accelerate
 
-
-
-google-genai
 gradio
 
+langchain
 langchain-chroma
-langchain[google-genai]
-langchain-google-genai
 langchain-huggingface
+langchain-ollama
 langgraph
 
 pandas
@@ -17,3 +14,5 @@ python-dotenv
 sentence-transformers
 
 transformers
+
+requests
