@@ -2,6 +2,9 @@
 from langchain_ollama.llms import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
 
+
+
+
 class OllamaService:
     def __init__(self, model: str = "gemma3:1b", temperature: float = 0.1):
         self.llm = OllamaLLM(model=model, temperature=temperature)

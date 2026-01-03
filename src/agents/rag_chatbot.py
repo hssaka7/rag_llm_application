@@ -147,5 +147,26 @@ memory = MemorySaver()
 graph = graph_builder.compile(checkpointer=memory)
 
 
+# # Specify an ID for the thread
+# config = {"configurable": {"thread_id": "abc123"}}
 
+# input_message = "Who is Ravi Lamichane "
+
+# for step in graph.stream(
+#     {"messages": [{"role": "user", "content": input_message}]},
+#     stream_mode="values",
+#     config=config
+# ):
+#     step["messages"][-1].pretty_print()
+
+# input_message = "what is he doing now"
+
+# print("\n\n/////////////////////////////////////////\n\n")
+
+# for step in graph.stream(
+#     {"messages": [{"role": "user", "content": input_message}]},
+#     stream_mode="values",
+#     config=config
+# ):
+#     step["messages"][-1].pretty_print()
 
