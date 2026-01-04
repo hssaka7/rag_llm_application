@@ -110,7 +110,7 @@ class ChromaDBInterface(VectorStore):
             reranker_model=self.reranker_model
         )
 
-        self.logger.info(f"Query Result length: {len(results)}")
+        self.logger.info(f"Query Result length: {len(results.get('documents', [[]])[0])}")
         return results
 
 # Example usage
