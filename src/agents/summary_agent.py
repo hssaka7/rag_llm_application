@@ -4,8 +4,8 @@ import logging.config
 import pandas as pd
 from dotenv import load_dotenv
 
-from src.services.vector_store import VectorStore
-from src.services.llm import LLMService
+from src.services.vector_store.base import VectorStore
+from src.services.llm.base import LLMService
 from src.utils.utils import parse_yaml
 from src.agents.rag_chatbot import graph, memory
 

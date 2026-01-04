@@ -10,7 +10,7 @@ import unicodedata
 
 from dotenv import load_dotenv
 
-from src.services.vector_store import ChromaDBInterface
+from src.services.vector_store.chroma import ChromaDBInterface
 from src.utils.utils import parse_yaml
 
 
