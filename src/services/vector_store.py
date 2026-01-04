@@ -17,6 +17,8 @@ class VectorStore(ABC):
     @abstractmethod
     def query(self, query_text: str, top_k: int = 3):
         pass
+
+
 class ChromaDBInterface(VectorStore):
     def __init__(
         self,
