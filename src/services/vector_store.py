@@ -1,10 +1,23 @@
-import logging
+
 import chromadb
-from chromadb.config import Settings
+import logging
 import unicodedata
+
+from abc import ABC, abstractmethod
+from chromadb.config import Settings
 from sentence_transformers import SentenceTransformer
 
-class ChromaDBInterface:
+
+# Abstract base class for vector store
+class VectorStore(ABC):
+    @abstractmethod
+    def add_documents(self, doc_ids: list, contents: list, metadatas: list = None):
+        pass
+
+    @abstractmethod
+    def query(self, query_text: str, top_k: int = 3):
+        pass
+class ChromaDBInterface(VectorStore):
     def __init__(
         self,
         collection_name: str = "documents",
@@ -25,7 +38,6 @@ class ChromaDBInterface:
             self.model = SentenceTransformer("BAAI/bge-m3")  # Multilingual model
 
         self.collection = self.client.get_or_create_collection(name=collection_name)
-                                                    
 
     def add_documents(self, doc_ids: list, contents: list, metadatas: list = None):
         """Cleans and adds documents with embeddings and metadata to ChromaDB."""

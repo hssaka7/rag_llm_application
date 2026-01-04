@@ -1,12 +1,16 @@
-
+from abc import ABC, abstractmethod
 from langchain_ollama.llms import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
 
 
+# Abstract base class for LLM service
+class LLMService(ABC):
+    @abstractmethod
+    def generate_content_stream(self, prompt: str, system_instruction: str = None):
+        pass
 
 
-
-class OllamaService:
+class OllamaService(LLMService):
     def __init__(self, model: str = "gemma3:1b", temperature: float = 0.1, llm_instance=None):
         if llm_instance is not None:
             self.llm = llm_instance

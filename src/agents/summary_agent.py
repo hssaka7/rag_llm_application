@@ -4,8 +4,8 @@ import logging.config
 import pandas as pd
 from dotenv import load_dotenv
 
-from src.services.vector_db_connector import ChromaDBInterface
-from src.services.llm import OllamaService
+from src.services.vector_store import VectorStore
+from src.services.llm import LLMService
 from src.utils.utils import parse_yaml
 from src.agents.rag_chatbot import graph, memory
 
@@ -19,21 +19,14 @@ logger = logging.getLogger(__name__)
 
 
 class SummaryAgent:
-    def __init__(self, vector_db=None, llm_service=None):
+    def __init__(self,
+        vector_db:VectorStore,
+        llm_service:LLMService,):
+        
         self.logger = logger
-        self.system_prompt_path = os.environ["SYSTEM_PROMPT_PATH"]
-        self.chroma_db_path = os.environ["CHROMA_DB_PATH"]
-
-        # Dependency injection for vector_db and llm_service
-        if vector_db is not None:
-            self.vector_db = vector_db
-        else:
-            self.vector_db = ChromaDBInterface(vector_db_path=self.chroma_db_path)
-
-        if llm_service is not None:
-            self.llm_service = llm_service
-        else:
-            self.llm_service = OllamaService()
+        
+        self.vector_db = vector_db
+        self.llm_service = llm_service
 
         self.chat = graph
         self.chat_memory = memory
