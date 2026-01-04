@@ -2,11 +2,15 @@ import gradio as gr
 
 import sys
 import os
+
+from sentence_transformers import CrossEncoder
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
+
 from src.agents.summary_agent import SummaryAgent
-from src.services.vector_store import ChromaDBInterface
+from src.services.vector_store import ChromaDBInterface, AdvanceRetrievalStrategy
 from src.services.llm import OllamaService
 
 # Example: Custom dependency injection (can be replaced with mocks or test doubles)
@@ -14,7 +18,10 @@ from src.services.llm import OllamaService
 # ollama_service = OllamaService(...)
 # summary_agent = SummaryAgent(vector_db=vector_db, ollama_service=ollama_service)
 
-vector_sercice = ChromaDBInterface(vector_db_path=os.environ["CHROMA_DB_PATH"])
+vector_sercice = ChromaDBInterface(vector_db_path=os.environ["CHROMA_DB_PATH"],
+								   retrieval_strategy=AdvanceRetrievalStrategy(),
+								   llm=OllamaService(),
+								   reranker_model=CrossEncoder("cross-encoder/stsb-roberta-base"))
 llm_servicce = OllamaService()
 summary_agent = SummaryAgent(vector_db=vector_sercice,
                              llm_service=llm_servicce)
