@@ -10,7 +10,7 @@ from src.utils.utils import parse_yaml
 from src.agents.rag_chatbot import graph, memory
 
 # Environment setup
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 
 logging_config_path = os.environ["LOGGER_FILE_PATH"]
 logging.config.dictConfig(parse_yaml(logging_config_path))

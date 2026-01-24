@@ -10,19 +10,17 @@ import unicodedata
 
 from dotenv import load_dotenv
 
-from src.services.vector_store.chroma import ChromaDBInterface
-from src.utils.utils import parse_yaml
-
-
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from src.services.vector_store import get_vector_store
+from src.utils.utils import parse_yaml
 
 class ETL:
 
-	def __init__(self, raw_filepath, vector_db_path):
+	def __init__(self, raw_filepath):
 		self.logger = logging.getLogger(__name__)
 		self.raw_filepath = raw_filepath
-		self.vector_db_path = vector_db_path
-		self.vector_db_conn = ChromaDBInterface(vector_db_path = self.vector_db_path)
+		self.vector_db_conn = get_vector_store()
 
 		transform_folder = os.path.join('data', 'transform')
 		if not os.path.exists(transform_folder):
@@ -64,7 +62,7 @@ class ETL:
 		return df[['_id', 'encoded_title', 'encoded_description', 'published_date', 'source_name', 'source_url']]
 
 
-	def load_data(self, df, batch_size = 10):
+	def load_data(self, df, batch_size = 100):
 		# TODO load the data to vector db
 		total_batch = math.ceil(len(df)/ batch_size)
 		for start in range(0, len(df), batch_size):
@@ -107,16 +105,14 @@ class ETL:
 
 if __name__ == "__main__":
     
-	load_dotenv()
+	load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 	logging_config_path = os.environ["LOGGER_FILE_PATH"]
 	raw_data_path = os.environ["RAW_DATA_PATH"]
-	chroma_db_path = os.environ["CHROMA_DB_PATH"]
 
 	# set loggers
 	logging.config.dictConfig(parse_yaml(logging_config_path))
 
-	etl_runner = ETL(raw_filepath= raw_data_path,
-					 vector_db_path=chroma_db_path)
+	etl_runner = ETL(raw_filepath= raw_data_path)
     
 	etl_runner.run()
 

@@ -3,7 +3,7 @@
 
 # RAG-based LLM Document Querying System
 
-This project is a Retrieval-Augmented Generation (RAG) system for querying documents using Large Language Models (LLMs). It leverages a vector database for efficient document retrieval and integrates with Ollama for advanced local LLM querying and reporting.
+This project is a Retrieval-Augmented Generation (RAG) system for querying documents using Large Language Models (LLMs). It leverages **Milvus** vector database for efficient document retrieval and integrates with Ollama for advanced local LLM querying and reporting.
 
 ---
 
@@ -48,14 +48,36 @@ ollama pull llama3
 
 You can use any supported model (see [Ollama Models](https://ollama.com/library)).
 
-### 3. Create and Activate a Virtual Environment
+### 3. Install and Run Milvus
+
+Milvus is used as the vector database for document storage and retrieval.
+
+**Option 1: Using Docker (Recommended)**
+
+```bash
+# Install Docker if not already installed
+# Then run Milvus standalone server
+docker run -p 19530:19530 -p 9091:9091 milvusdb/milvus:latest standalone
+```
+
+**Option 2: Using Milvus Lite (Local File-based)**
+
+For development, you can use Milvus Lite which stores data locally without a server:
+
+```bash
+pip install milvus-lite
+```
+
+Then set `MILVUS_URI = './data/milvus.db'` in your `.env` file.
+
+### 4. Create and Activate a Virtual Environment
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 ```
 
-### 4. Install Dependencies
+### 5. Install Dependencies
 
 ```bash
 pip install -r requirements.txt --no-cache-dir
@@ -65,16 +87,24 @@ pip install -r requirements.txt --no-cache-dir
 
 ## Usage
 
-### 1. Run the ETL Process (Load Data)
+### 1. Start Milvus (if using Docker)
+
+If you're using Docker for Milvus, make sure the container is running:
 
 ```bash
-python src/etl.py
+docker run -p 19530:19530 -p 9091:9091 milvusdb/milvus:latest standalone
 ```
 
-### 2. Start the Querying UI
+### 2. Run the ETL Process (Load Data)
 
 ```bash
-python src/ui.py
+python scripts/etl.py
+```
+
+### 3. Start the Querying UI
+
+```bash
+python scripts/ui.py
 ```
 
 ---
@@ -83,8 +113,9 @@ python src/ui.py
 
 - `src/` - Main source code
 	- `agents/` - RAG chatbot and agent logic
-	- `services/` - LLM and vector DB connectors
+	- `services/` - LLM and **Milvus** vector DB connectors
 	- `utils/` - Utility functions
+- `scripts/` - ETL pipeline and UI scripts
 	- `etl.py` - ETL pipeline for data ingestion
 	- `ui.py` - User interface for querying
 - `prompts/` - Prompt templates for various tasks
@@ -97,6 +128,8 @@ python src/ui.py
 ## Configuration
 
 - **Ollama Model:** By default, the UI uses the `llama3` model. You can change this in the code or by pulling a different model with Ollama.
+- **Milvus Database:** Configure the Milvus connection in `.env`:
+  - `MILVUS_URI`: Set to `'http://localhost:19530'` for Docker server or `'./data/milvus.db'` for Milvus Lite
 - **Logging:** See `configs/logging_config.yaml` for logging setup.
 - **Prompts:** Customize prompt templates in the `prompts/` directory.
 

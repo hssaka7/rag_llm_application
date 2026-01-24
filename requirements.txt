@@ -3,13 +3,14 @@ accelerate
 gradio
 
 langchain
-langchain-chroma
 langchain-huggingface
 langchain-ollama
 langgraph
+lark
 
 pandas
 python-dotenv
+pymilvus
 
 sentence-transformers
 

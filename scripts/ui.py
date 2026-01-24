@@ -10,15 +10,13 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 
 from src.agents.summary_agent import SummaryAgent
-from src.services.vector_store.chroma import ChromaDBInterface
+from src.services.vector_store import get_vector_store
 from src.retrieval.advance import AdvanceRetrievalStrategy
 from src.services.llm.ollama import OllamaService
 
 
 
-vector_sercice = ChromaDBInterface(vector_db_path=os.environ["CHROMA_DB_PATH"],
-								   retrieval_strategy=AdvanceRetrievalStrategy(),
-								   llm=OllamaService(),
+vector_sercice = get_vector_store(llm=OllamaService(),
 								   reranker_model=CrossEncoder("cross-encoder/stsb-roberta-base"))
 llm_servicce = OllamaService()
 summary_agent = SummaryAgent(vector_db=vector_sercice,
@@ -27,7 +25,7 @@ summary_agent = SummaryAgent(vector_db=vector_sercice,
 prompt_context = {k:{} for k in summary_agent.prompt_file_map.keys()}
 
 with gr.Blocks(gr.themes.Ocean()) as app:
-	gr.Markdown("## ChromaDB Document Management UI")
+	gr.Markdown("## Milvus Document Management UI")
 
 	with gr.Tab("Add Document"):
 		doc_id = gr.Textbox(label="Document ID")

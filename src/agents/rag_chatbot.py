@@ -10,7 +10,6 @@ import yaml
 from dotenv import load_dotenv
 
 from langchain_ollama.chat_models import ChatOllama
-from langchain_chroma import Chroma
 from langchain_core.tools import tool
 from langchain_core.documents import Document
 from langchain_core.messages import SystemMessage
@@ -22,8 +21,10 @@ from langgraph.prebuilt import ToolNode, tools_condition
 
 from typing_extensions import List, TypedDict
 
+from src.services.vector_store import get_vector_store
+
 # set up environment and loggers
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 logging_config_path = os.environ["LOGGER_FILE_PATH"]
 with open(logging_config_path) as fp:
     logger_conf = yaml.safe_load(fp)
@@ -44,19 +45,8 @@ embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-m3",
 
 # VECTOR STORE
 
-# Initialize the persistent client with the correct directory
-persistent_client = chromadb.PersistentClient(path="./data/chroma_db")
-
-# List collections to verify the existing ones
-collections = persistent_client.list_collections()
-print("Available collections:", collections)
-
-# Ensure the collection name matches the existing one
-vector_store = Chroma(
-    client=persistent_client,
-    collection_name='documents',  # Replace 'documents' with the actual collection name if different
-    embedding_function=embeddings,
-)
+# Initialize Milvus vector store
+vector_store = get_vector_store()
 
 # Prompt
 prompt = """
@@ -145,28 +135,4 @@ graph_builder.add_edge("generate", END)
 
 memory = MemorySaver()
 graph = graph_builder.compile(checkpointer=memory)
-
-
-# # Specify an ID for the thread
-# config = {"configurable": {"thread_id": "abc123"}}
-
-# input_message = "Who is Ravi Lamichane "
-
-# for step in graph.stream(
-#     {"messages": [{"role": "user", "content": input_message}]},
-#     stream_mode="values",
-#     config=config
-# ):
-#     step["messages"][-1].pretty_print()
-
-# input_message = "what is he doing now"
-
-# print("\n\n/////////////////////////////////////////\n\n")
-
-# for step in graph.stream(
-#     {"messages": [{"role": "user", "content": input_message}]},
-#     stream_mode="values",
-#     config=config
-# ):
-#     step["messages"][-1].pretty_print()
 
