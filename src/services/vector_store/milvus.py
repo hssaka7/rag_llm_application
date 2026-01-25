@@ -189,6 +189,21 @@ class MilvusDBInterface(VectorStore):
         self.logger.info(f"Query Result length: {len(documents)}")
         return formatted_results
 
+    def doc_exists(self, doc_id: str) -> bool:
+        """Check if a document exists in the collection."""
+        try:
+            # Query for the document by id
+            results = self.client.query(
+                collection_name=self.collection_name,
+                filter=f"id == '{doc_id}'",
+                limit=1,
+                output_fields=["id"]
+            )
+            return len(results) > 0
+        except Exception as e:
+            self.logger.error(f"Failed to check if document exists: {e}")
+            return False
+
     def similarity_search(self, query: str, k: int = 4):
         """
         Perform similarity search and return Document objects compatible with LangChain.

@@ -17,3 +17,7 @@ class VectorStore(ABC):
     @abstractmethod
     def query(self, query_text: str, top_k: int = 3):
         pass
+
+    @abstractmethod
+    def doc_exists(self, doc_id: str) -> bool:
+        pass

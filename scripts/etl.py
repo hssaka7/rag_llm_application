@@ -10,6 +10,7 @@ import unicodedata
 
 from dotenv import load_dotenv
 
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.services.vector_store import get_vector_store
@@ -62,7 +63,7 @@ class ETL:
 		return df[['_id', 'encoded_title', 'encoded_description', 'published_date', 'source_name', 'source_url']]
 
 
-	def load_data(self, df, batch_size = 100):
+	def load_data(self, df, batch_size = 10):
 		# TODO load the data to vector db
 		total_batch = math.ceil(len(df)/ batch_size)
 		for start in range(0, len(df), batch_size):
@@ -70,18 +71,33 @@ class ETL:
 			batch_number = start // batch_size + 1
 			batch = df.iloc[start : start + batch_size]
             
+			# Filter out documents that already exist
+			try:
+				existing_mask = batch["_id"].astype(str).apply(self.vector_db_conn.doc_exists)
+			except Exception as e:
+				self.logger.error(f"Error checking existing documents for batch {batch_number}: {e}")
+				existing_mask = [False] * len(batch)  # Assume none exist to proceed
+			new_batch = batch[~existing_mask]
+			
+			if new_batch.empty:
+				self.logger.info(f"Batch {batch_number} / {total_batch} skipped - all documents already exist")
+				continue
+            
 			start_time = time.time()
-			self.logger.info(f"Inserting batch {batch_number} / {total_batch} with {len(batch)} records...")
-            
-            
-			self.vector_db_conn.add_documents(
-				doc_ids=batch["_id"].astype(str).tolist(),
-				contents=batch["encoded_description"].astype(str).tolist(),
-				metadatas = batch[['encoded_title','published_date', 'source_name', 'source_url']].to_dict('records')
-			)
-
-			time_taken = round( (time.time() - start_time), 2 )
-			self.logger.info(f"Batch {batch_number} / {total_batch} completed in {time_taken} sec")
+			self.logger.info(f"Inserting batch {batch_number} / {total_batch} with {len(new_batch)} new records...")
+			
+			try:
+				self.vector_db_conn.add_documents(
+					doc_ids=new_batch["_id"].astype(str).tolist(),
+					contents=new_batch["encoded_description"].astype(str).tolist(),
+					metadatas = new_batch[['encoded_title','published_date', 'source_name', 'source_url']].to_dict('records')
+				)
+				time_taken = round( (time.time() - start_time), 2 )
+				self.logger.info(f"Batch {batch_number} / {total_batch} completed in {time_taken} sec")
+			except Exception as e:
+				time_taken = round( (time.time() - start_time), 2 )
+				self.logger.error(f"Batch {batch_number} / {total_batch} failed after {time_taken} sec: {e}")
+				continue
             
 		self.logger.info("All batch completed")
 
@@ -104,17 +120,16 @@ class ETL:
         
 
 if __name__ == "__main__":
-    
-	load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
-	logging_config_path = os.environ["LOGGER_FILE_PATH"]
-	raw_data_path = os.environ["RAW_DATA_PATH"]
+    load_dotenv()
+    logging_config_path = os.environ["LOGGER_FILE_PATH"]
+    raw_data_path = os.environ["RAW_DATA_PATH"]
 
-	# set loggers
-	logging.config.dictConfig(parse_yaml(logging_config_path))
+    # set loggers
+    logging.config.dictConfig(parse_yaml(logging_config_path))
 
-	etl_runner = ETL(raw_filepath= raw_data_path)
+    etl_runner = ETL(raw_filepath= raw_data_path)
     
-	etl_runner.run()
+    etl_runner.run()
 
 
       
